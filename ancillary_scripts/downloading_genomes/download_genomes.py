@@ -92,10 +92,58 @@ def download_ensembl_fasta(species, assembly, release, release_outsubdir):
     print(f'command: {command}')
     os.system(command)
 
-    # Did primary assembly download, if not download toplevel
+
+    # There appears to be an inconsistency in ENSEMBL naming conventions. 
+    #
+    # So far as I can tell this file includes all the chromosome sequences as well as non-chromosomal sequences.  It therefore contains all the sequences in the files:
+    #
+    # Homo_sapiens.GRCh38.dna.chromosome.1.fa.gz
+    # .
+    # .
+    # .
+    # Homo_sapiens.GRCh38.dna.chromosome.Y.fa.gz    
+    # Homo_sapiens.GRCh38.dna.nonchromosomal.fa.gz
+    #
+    # However, the naming conventions for rat seem different (https://ftp.ensembl.org/pub/release-114/fasta/rattus_norvegicus/dna/).
+    #
+    # Here there is not a single primary assembly file, but multiple files.  These files are separated by chromosome:
+    #  Rattus_norvegicus.GRCr8.dna.primary_assembly.1.fa.gz
+    # .
+    # .
+    # .
+    # Rattus_norvegicus.GRCr8.dna.primary_assembly.Y.fa.gz
+    #
+    # However, the non-chromosomal sequences are not included in the primary assembly files, but instead are kept in a file named:
+    # ‘Rattus_norvegicus.GRCr8.dna.nonchromosomal.fa.gz’
+    #
+    # Does this mean that to download all the sequences (excluding haplotypes
+    # and patches) I should instruct my script to:
+    #
+    # 1)    Check how many primary assembly files are present.
+    # 2)    If there is 1 primary assembly file, then download it.
+    # But, if there is more than one, then download all the primary assembly files and download the separate nonchromosomal non-primary assembly file, 
+    # if there is no nonchromosomal primary assembly file already downloaded.
+
+    
+    # Check the files downloaded to decide what to do next
     file_lookup = os.getcwd() + '/*.dna.primary_assembly.*'
     fasta_files_downloaded = glob.glob(file_lookup)
     
+    nonchromosomal_already_downloaded_flag = False
+    for fasta_file in fasta_files_downloaded:
+        if  '.nonchromosomal.' in fasta_file:
+            nonchromosomal_already_downloaded_flag = True
+
+    if len(fasta_files_downloaded) > 1:
+        print('Mulitple primary assembly files downloaded')
+        if nonchromosomal_already_downloaded_flag is False:
+            print('A nonchromosomal file has not been downloaded, let us download such a file, if it exists')
+            print('This is being done because there appears to be an inconsistency in ENSEMBL naming conventions - refer to comments in this script for more details')
+            command = 'lftp -e "mget *.nonchromosomal.*fa.gz; bye" '
+            command = command + download_folder
+            print(f'command: {command}')
+            os.system(command)
+
     if(len(fasta_files_downloaded) == 0):
         print('Primary assembly not found, downloading toplevel file')
         print('(When there is no primary assembly file, the toplevel file does not include haplotype sequences)')
