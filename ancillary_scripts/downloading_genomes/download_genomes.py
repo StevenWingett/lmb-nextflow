@@ -139,7 +139,7 @@ def download_ensembl_fasta(species, assembly, release, release_outsubdir):
         if nonchromosomal_already_downloaded_flag is False:
             print('A nonchromosomal file has not been downloaded, let us download such a file, if it exists')
             print('This is being done because there appears to be an inconsistency in ENSEMBL naming conventions - refer to comments in this script for more details')
-            command = 'lftp -e "mget *.nonchromosomal.*fa.gz; bye" '
+            command = 'lftp -e "mget *.dna.nonchromosomal.fa.gz; bye" '
             command = command + download_folder
             print(f'command: {command}')
             os.system(command)
