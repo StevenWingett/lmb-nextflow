@@ -655,7 +655,12 @@ def main():
 
     with open(genome_overview_file, 'w') as f_out:
         f_out.write(genome_overview_text)
-    f_out.close()    
+    f_out.close()
+
+    # Sometimes the file permissions are not as we would like
+    print(f'Changing file permissions of {genome_ref_outdir}')
+    os.system(f'chmod g-s {genome_ref_outdir}')
+    os.system(f'chmod -R a-w {genome_ref_outdir}')
 
     print('Done')
 
